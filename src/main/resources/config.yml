@@ -1,0 +1,66 @@
+#####
+# Potion Recipes are limited based on
+#   https://jd.papermc.io/paper/1.21.6/io/papermc/paper/potion/PotionMix.html
+# Input and Ingredient are settings based on
+#   https://jd.papermc.io/paper/1.21.6/org/bukkit/inventory/RecipeChoice.html
+# For ItemStack, you may just want to make them in game and use /simplemixtures serialize
+#####
+# The structure is as follows...
+# recipes:
+#   key:
+#     input:
+#       match_type: <EXACT|MATERIAL>
+#       arguments: List of Item Stacks or Materials
+#     ingredient:
+#       match_type: <EXACT|MATERIAL>
+#       arguments: List of Item Stacks or Materials
+#     result: Item Stack
+#####
+recipes:
+  haste:
+    input:
+      match_type: EXACT
+      arguments:
+      - ==: org.bukkit.inventory.ItemStack
+        DataVersion: 4435
+        id: minecraft:potion
+        count: 1
+        components:
+          minecraft:potion_contents: '{potion:"minecraft:awkward"}'
+        schema_version: 1
+    ingredient:
+      match_type: MATERIAL
+      arguments:
+      - HONEY_BOTTLE
+    result:
+      ==: org.bukkit.inventory.ItemStack
+      DataVersion: 4435
+      id: minecraft:potion
+      count: 1
+      components:
+        minecraft:lore: '[{italic:0b,text:"Some say it does things..."}]'
+        minecraft:potion_contents: '{custom_color:8439583,custom_effects:[{duration:3600,id:"minecraft:haste",show_icon:1b}]}'
+        minecraft:custom_name: '{color:"aqua",italic:0b,text:"The Potion of SPEEDY BOI"}'
+      schema_version: 1
+
+# What should be dropped from the brewing stand when an ingredient is brewed?
+# See: https://jd.papermc.io/paper/1.21.6/org/bukkit/Material.html
+leftovers:
+  BUCKET:
+    - AXOLOTL_BUCKET
+    - COD_BUCKET
+    - LAVA_BUCKET
+    - MILK_BUCKET
+    - POWDER_SNOW_BUCKET
+    - PUFFERFISH_BUCKET
+    - SALMON_BUCKET
+    - TADPOLE_BUCKET
+    - TROPICAL_FISH_BUCKET
+    - WATER_BUCKET
+  GLASS_BOTTLE:
+    - EXPERIENCE_BOTTLE
+    #- HONEY_BOTTLE  <- This already drops a bottle
+    - OMINOUS_BOTTLE
+    - POTION
+    - LINGERING_POTION
+    - SPLASH_POTION

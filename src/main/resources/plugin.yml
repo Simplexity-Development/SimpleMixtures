@@ -1,0 +1,4 @@
+name: SimpleMixtures
+version: '1.0-SNAPSHOT'
+main: simplexity.simplemixtures.SimpleMixtures
+api-version: '1.21'
