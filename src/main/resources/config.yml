@@ -1,9 +1,15 @@
 #####
+# SimpleMixtures config.yml
+#####
 # Potion Recipes are limited based on
 #   https://jd.papermc.io/paper/1.21.6/io/papermc/paper/potion/PotionMix.html
 # Input and Ingredient are settings based on
 #   https://jd.papermc.io/paper/1.21.6/org/bukkit/inventory/RecipeChoice.html
+#
 # For ItemStack, you may just want to make them in game and use /simplemixtures serialize
+#
+# You can also scroll down to recipe_choices and item_stacks
+# to simplify and reuse your recipe choices and item stacks.
 #####
 # The structure is as follows...
 # recipes:
@@ -21,27 +27,60 @@ recipes:
     input:
       match_type: EXACT
       arguments:
-      - ==: org.bukkit.inventory.ItemStack
-        DataVersion: 4435
-        id: minecraft:potion
-        count: 1
-        components:
-          minecraft:potion_contents: '{potion:"minecraft:awkward"}'
-        schema_version: 1
+        - ==: org.bukkit.inventory.ItemStack
+          DataVersion: 4435
+          id: minecraft:potion
+          count: 1
+          components:
+            minecraft:potion_contents: '{potion:"minecraft:awkward"}'
+          schema_version: 1
     ingredient:
       match_type: MATERIAL
       arguments:
-      - HONEY_BOTTLE
+        - HONEY_BOTTLE
+    result: haste_potion
+  haste_2:
+    input: haste_potion
+    ingredient:
+      match_type: MATERIAL
+      arguments:
+        - GLOWSTONE_DUST
     result:
       ==: org.bukkit.inventory.ItemStack
       DataVersion: 4435
       id: minecraft:potion
       count: 1
       components:
-        minecraft:lore: '[{italic:0b,text:"Some say it does things..."}]'
-        minecraft:potion_contents: '{custom_color:8439583,custom_effects:[{duration:3600,id:"minecraft:haste",show_icon:1b}]}'
-        minecraft:custom_name: '{color:"aqua",italic:0b,text:"The Potion of SPEEDY BOI"}'
+        minecraft:lore: '[{italic:0b,text:"Some say it does MORE things..."}]'
+        minecraft:potion_contents: '{custom_color:8439583,custom_effects:[{duration:1800,id:"minecraft:haste",amplifier:1,show_icon:1b}]}'
+        minecraft:custom_name: '{color:"aqua",italic:0b,text:"The Potion of MORE SPEEDY BOI"}'
       schema_version: 1
+
+# Placeholder for Recipe Choices
+# You can reference the names of these instead of the actual recipe choices in recipes.
+recipe_choices:
+  haste_potion:
+    match_type: EXACT
+    arguments:
+      - haste_potion
+  material_test:
+    match_type: MATERIAL
+    arguments:
+      - GRASS_BLOCK
+
+# Placeholder for Item Stacks
+# You can reference the names of these instead of the actual item stacks in recipe choices and recipes.
+item_stacks:
+  haste_potion:
+    ==: org.bukkit.inventory.ItemStack
+    DataVersion: 4435
+    id: minecraft:potion
+    count: 1
+    components:
+      minecraft:lore: '[{italic:0b,text:"Some say it does things..."}]'
+      minecraft:potion_contents: '{custom_color:8439583,custom_effects:[{duration:3600,id:"minecraft:haste",show_icon:1b}]}'
+      minecraft:custom_name: '{color:"aqua",italic:0b,text:"The Potion of SPEEDY BOI"}'
+    schema_version: 1
 
 # What should be dropped from the brewing stand when an ingredient is brewed?
 # See: https://jd.papermc.io/paper/1.21.6/org/bukkit/Material.html

@@ -3,6 +3,7 @@ package simplexity.simplemixtures.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import simplexity.simplemixtures.command.subcommands.RecipeCommand;
 import simplexity.simplemixtures.command.subcommands.ReloadCommand;
 import simplexity.simplemixtures.command.subcommands.SerializeCommand;
 
@@ -16,6 +17,7 @@ public class SimpleMixturesCommand {
                 .requires(src -> src.getSender().hasPermission(COMMAND_PERMISSION));
         new SerializeCommand().subcommandTo(builder);
         new ReloadCommand().subcommandTo(builder);
+        new RecipeCommand().subcommandTo(builder);
         return builder;
     }
 

@@ -1,7 +1,5 @@
 package simplexity.simplemixtures.config;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.potion.PotionMix;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -10,8 +8,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import simplexity.simplemixtures.SimpleMixtures;
@@ -25,9 +21,10 @@ public class Config {
     }
 
     private static Config instance;
-    private static Set<NamespacedKey> recipesAdded = new HashSet<>();
-
-    private final Map<Material, Material> brewingLeftover = new HashMap<>();
+    private static final Map<NamespacedKey, PotionMix> recipesAdded = new HashMap<>();
+    private static final Map<Material, Material> brewingLeftover = new HashMap<>();
+    private static final Map<String, RecipeChoice> recipeChoices = new HashMap<>();
+    private static final Map<String, ItemStack> itemStacks = new HashMap<>();
 
     public static @NotNull Config getInstance() {
         if (instance == null) instance = new Config();
@@ -46,8 +43,13 @@ public class Config {
 
         clearRecipes();
         brewingLeftover.clear();
-        registerLeftovers(config);
+        recipeChoices.clear();
+        itemStacks.clear();
+
+        registerItemStacks(config);
+        registerRecipeChoices(config);
         registerRecipes(config);
+        registerLeftovers(config);
     }
 
     public @Nullable Material getBrewingLeftover(@NotNull Material ingredient) {
@@ -82,17 +84,42 @@ public class Config {
         ConfigurationSection potionConfig = recipes.getConfigurationSection(key);
         if (potionConfig == null) return;
 
-        RecipeChoice input = getRecipeChoice(potionConfig.getConfigurationSection("input"));
+        RecipeChoice input = potionConfig.isConfigurationSection("input")
+                ? getRecipeChoice(potionConfig.getConfigurationSection("input"))
+                : recipeChoices.getOrDefault(potionConfig.getString("input"), null);
         if (input == null) return;
-        RecipeChoice ingredient = getRecipeChoice(potionConfig.getConfigurationSection("ingredient"));
+        RecipeChoice ingredient = potionConfig.isConfigurationSection("ingredient")
+                ? getRecipeChoice(potionConfig.getConfigurationSection("ingredient"))
+                : recipeChoices.getOrDefault(potionConfig.getString("ingredient"), null);
         if (ingredient == null) return;
-        ItemStack result = potionConfig.getItemStack("result");
+        ItemStack result = potionConfig.isItemStack("result")
+                ? potionConfig.getItemStack("result")
+                : itemStacks.getOrDefault(potionConfig.getString("result"), null);
         if (result == null) return;
         NamespacedKey namespacedKey = new NamespacedKey(SimpleMixtures.getPlugin(), key);
 
         PotionMix potionMix = new PotionMix(namespacedKey, result, input, ingredient);
         Bukkit.getServer().getPotionBrewer().addPotionMix(potionMix);
-        recipesAdded.add(namespacedKey);
+        recipesAdded.put(namespacedKey, potionMix);
+    }
+
+    private void registerRecipeChoices(FileConfiguration config) {
+        ConfigurationSection placeholderConfig = config.getConfigurationSection("recipe_choices");
+        if (placeholderConfig == null) return;
+        for (String key : placeholderConfig.getKeys(false)) {
+            RecipeChoice choice = getRecipeChoice(placeholderConfig.getConfigurationSection(key));
+            if (choice == null) continue;
+            recipeChoices.put(key, choice);
+        }
+    }
+
+    private void registerItemStacks(FileConfiguration config) {
+        ConfigurationSection placeholderConfig = config.getConfigurationSection("item_stacks");
+        if (placeholderConfig == null) return;
+        for (String key : placeholderConfig.getKeys(false)) {
+            if (!placeholderConfig.isItemStack(key)) continue;
+            itemStacks.put(key, placeholderConfig.getItemStack(key));
+        }
     }
 
     private RecipeChoice getRecipeChoice(ConfigurationSection recipeChoiceConfig) {
@@ -104,18 +131,24 @@ public class Config {
             return null;
         }
 
-        try {
-            return switch (type) {
-                case EXACT ->
-                        new RecipeChoice.ExactChoice((List<ItemStack>) recipeChoiceConfig.getList("arguments", new ArrayList<ItemStack>()));
-                case MATERIAL ->
-                        new RecipeChoice.MaterialChoice(getMaterialList(recipeChoiceConfig.getStringList("arguments")));
-            };
+        return switch (type) {
+            case EXACT ->
+                    new RecipeChoice.ExactChoice(getExactChoices(recipeChoiceConfig.getList("arguments")));
+            case MATERIAL ->
+                    new RecipeChoice.MaterialChoice(getMaterialList(recipeChoiceConfig.getStringList("arguments")));
+        };
+    }
+
+    private List<ItemStack> getExactChoices(List<?> arguments) {
+        ArrayList<ItemStack> items = new ArrayList<>();
+        if (arguments == null) return items;
+
+        Map<String,ItemStack> itemStacks = Config.itemStacks;
+        for (Object object : arguments) {
+            if (object instanceof ItemStack item) items.add(item);
+            if (object instanceof String string && itemStacks.containsKey(string)) items.add(itemStacks.get(string));
         }
-        catch (ClassCastException ignored) {
-            SimpleMixtures.getPlugin().getLogger().warning("[SimpleMixtures] Configuration at " + recipeChoiceConfig.getCurrentPath() + " is not valid.");
-            return null;
-        }
+        return items;
     }
 
     private List<Material> getMaterialList(List<String> materials) {
@@ -125,14 +158,33 @@ public class Config {
             try {
                 materialsList.add(Material.valueOf(material.toUpperCase()));
             }
-            catch (IllegalArgumentException ignored) { }
+            catch (IllegalArgumentException ignored) {
+                SimpleMixtures.getPlugin().getLogger().warning("[SimpleMixtures] Invalid material type: " + material);
+            }
         }
 
         return materialsList;
     }
 
+    public PotionMix getRecipe(String name) {
+        NamespacedKey key = new NamespacedKey(SimpleMixtures.getPlugin(), name);
+        return recipesAdded.getOrDefault(key, null);
+    }
+
+    public Map<NamespacedKey,PotionMix> getRecipes() {
+        return Collections.unmodifiableMap(recipesAdded);
+    }
+
+    public Map<String,RecipeChoice> getRecipeChoices() {
+        return Collections.unmodifiableMap(recipeChoices);
+    }
+
+    public Map<String,ItemStack> getItemStacks() {
+        return Collections.unmodifiableMap(itemStacks);
+    }
+
     private void clearRecipes() {
-        for (NamespacedKey recipe : recipesAdded) {
+        for (NamespacedKey recipe : recipesAdded.keySet()) {
             Bukkit.getServer().getPotionBrewer().removePotionMix(recipe);
         }
         recipesAdded.clear();
