@@ -20,6 +20,7 @@ public final class SimpleMixtures extends JavaPlugin {
         });
 
         Bukkit.getServer().getPluginManager().registerEvents(new BrewingStandListener(), this);
+        plugin.saveDefaultConfig();
 
         try {
             Config.getInstance();

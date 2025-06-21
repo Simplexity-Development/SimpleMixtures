@@ -40,7 +40,6 @@ public class RecipeCommand implements SubCommand {
         for (String key : recipeChoices.keySet()) {
             sb.append("\n  ").append(key);
         }
-        ctx.getSource().getSender().sendPlainMessage(sb.toString());
 
         sb.append("\n\nItem Stacks:");
         for (String key : itemStacks.keySet()) {
